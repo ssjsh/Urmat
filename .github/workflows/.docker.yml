@@ -13,12 +13,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
     - name: Build Docker image
       run: docker build -t miamotos/cicd:cicd .
 
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-
-    - name: Push Docker image to Docker Hub
-      run: docker push miamotos/cicd:cicd
+    - name: Deploy to Production
+      run: |
+        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /home/deploy && docker build -t ${{ secrets.IMAGE_NAME }} ."
+        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker run -d -p 8080:8080 --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.IMAGE_NAME }}"
