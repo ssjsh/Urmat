@@ -1,3 +1,3 @@
-module sample-dockerize-app
+module myapp
 
 go 1.18
