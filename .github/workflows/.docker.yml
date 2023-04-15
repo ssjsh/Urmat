@@ -13,21 +13,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
-
-    - name: Build Docker image
-      run: docker build -t miamotos/cicd:cicd .
-
-    - name: Login to Docker Hub
-      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-    - name: Push Docker image
-      run: docker push miamotos/cicd:cicd
-
-    - name: Deploy to Production
+    - name: Build Docker image on remote server
       run: |
-        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /home/deploy && docker pull miamotos/cicd:cicd"
-        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker stop ${{ secrets.CONTAINER_NAME }} || true"
-        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker rm ${{ secrets.CONTAINER_NAME }} || true"
-        sshpass -p "${{ secrets.REMOTE_USER_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker run -d -p 8080:8080 --name ${{ secrets.CONTAINER_NAME }} miamotos/cicd:cicd"
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /home/deploy && docker build -t ${{ secrets.IMAGE_NAME }} ."
+
+    - name: Run Docker container on remote server
+      run: |
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker run -d -p 8080:8080 --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.IMAGE_NAME }}"
