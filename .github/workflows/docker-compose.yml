@@ -1,0 +1,10 @@
+version: '3'
+services:
+  web:
+    image: miamotos/cicd:cicd
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "80:80"
