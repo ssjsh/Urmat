@@ -29,6 +29,11 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
+        script: |
+          # Подключение к серверу по SSH и выполнение команд
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker pull miamotos/cicd:cicd
+          docker run -d -p 8080:80 miamotos/cicd:cicd
 
     - name: Update Docker image on server
       run: |
