@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Docker Build, Push, Swarm Join and Deploy
 
 on:
   push:
@@ -12,24 +12,25 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      
+
     - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-image:latest .
+      run: docker build -t miamotos/cicd:cicd .
 
     - name: Login to Docker Hub
-      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Push Docker image to Docker Hub
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/my-image:latest
+      run: docker push miamotos/cicd:cicd
 
-    - name: Build Docker image on remote server
-      run: |
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /home/deploy && docker build -t ${{ secrets.IMAGE_NAME }} ."
-      if: success()
+  deploy:
+    runs-on: ubuntu-latest
 
-    - name: Run Docker container on remote server
-      run: |
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "docker run -d -p 8080:8080 --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.IMAGE_NAME }}"
-      if: success()
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-  
+    - name: Join Docker Swarm
+      run: docker swarm join --token ${{ secrets.SWARM_TOKEN }} ${{ secrets.SWARM_MANAGER_IP }}:2377
+
+    - name: Deploy Docker Stack
+      run: docker stack deploy -c docker-compose.yml my-app
