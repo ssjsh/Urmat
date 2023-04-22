@@ -19,7 +19,8 @@ jobs:
       run: docker build -t miamotos/cicd:cicd .
 
     - name: Login to Docker Hub
-      run: echo "778106101320" | docker login -u "miamotos" --password-stdin
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
 
 
     - name: Push Docker image to Docker Hub
