@@ -40,7 +40,7 @@ jobs:
           known_hosts: "just-a-placeholder-so-we-dont-get-errors"
           
       - name: Generate auth hosts
-        run: ssh-keyscan -vvv -T 10 -p 22 -k diffie-hellman-group-exchange-sha256 192.168.24.128 >> ~/.ssh/known_hosts
+        run: ssh-keyscan -vvv -T 10 -p 22 -o KexAlgorithms=diffie-hellman-group-exchange-sha256 192.168.24.128 >> ~/.ssh/known_hosts
 
 
       - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
