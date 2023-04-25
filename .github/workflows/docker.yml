@@ -22,19 +22,17 @@ jobs:
     - name: Push Docker image to Docker Hub
       run: docker push miamotos/cicd:cicd
       
-    - name: Deploy code
-      uses: easingthemes/ssh-deploy@v2.1.5
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
       with:
-        ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
-        ssh-host: ${{ secrets.SERVER_SSH_HOST }}
-        ssh-username: ${{ secrets.SERVER_SSH_USERNAME }}
-        remote-dir: /home/deploy
-        local-dir: .
-        args: -rltgoDzvO --delete
+        host: ${{ secrets.SERVER_SSH_HOST }}
+        username: ${{ secrets.SERVER_SSH_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker pull miamotos/cicd:latest
+          docker stop cicd || true
+          docker rm cicd || true
+          docker pull miamotos/cicd:cicd
+          docker run -d --name cicd -p 80:80 miamotos/cicd:cicd
 
-    - name: Start Docker container on remote server
-      run: |
-        docker stop cicd || true
-        docker rm cicd || true
-        docker pull miamotos/cicd:cicd
-        docker run -d --name cicd -p 80:80 miamotos/cicd:cicd
