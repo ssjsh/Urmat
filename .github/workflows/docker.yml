@@ -24,4 +24,5 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          docker start hello
+          docker run -d --name hello -p 80:80 
+          
